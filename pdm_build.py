@@ -5,10 +5,13 @@ import platform
 import re
 import shutil
 import subprocess
+import sys
 import sysconfig
 from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.request import urlretrieve
+
+import pbs_installer
 
 try:
     import tomllib
@@ -92,10 +95,21 @@ def setup_caddy_snake(path: Path) -> Path:
     return target
 
 
-def build(output: str) -> None:
-    xcaddy = setup_xcaddy(Path().cwd())
+def install_pbs(path: Path) -> Path:
+    version = ".".join(map(str, sys.version_info[:3]))
+    target = path / "python"
+    if target.exists():
+        shutil.rmtree(target)
+    pbs_installer.install(version, target)
+    return target
 
-    caddy_snake = setup_caddy_snake(Path().cwd())
+
+def build(output: str) -> None:
+    cwd = Path().cwd()
+    xcaddy = setup_xcaddy(cwd)
+
+    caddy_snake = setup_caddy_snake(cwd)
+    pbs = install_pbs(cwd)
 
     modules = [
         "github.com/mholt/caddy-webdav",
@@ -110,8 +124,8 @@ def build(output: str) -> None:
         args.extend(["--with", module])
     args.extend(["--output", output])
 
-    include_path = sysconfig.get_path("include")
-    libdir = sysconfig.get_config_var("LIBDIR")
+    include_path = str(pbs / "include")
+    libdir = str(pbs / "libs") if is_windows() else str(pbs / "lib")
 
     libdir_files = [
         p.stem for p in Path(libdir).glob("*") if "python" in p.stem.lower()
@@ -133,6 +147,11 @@ def build(output: str) -> None:
         raise RuntimeError(msg)
     Path(output).chmod(0o777)
 
+    if is_windows():
+        dlls = pbs.glob("python*.dll")
+        for dll in dlls:
+            shutil.copy(dll, Path(output).parent)
+
 
 def pdm_build_hook_enabled(context: Context):
     return context.target != "sdist"
@@ -149,12 +168,6 @@ def pdm_build_initialize(context: Context) -> None:
     if is_windows():
         output_path = output_path.with_suffix(".exe")
     build(str(output_path))
-
-    if is_windows():
-        stdlib = Path(sysconfig.get_path("stdlib"))
-        dlls = stdlib.parent.glob("python*.dll")
-        for dll in dlls:
-            shutil.copy(dll, context.build_dir / "bin")
 
 
 def pdm_build_finalize(context: Context, artifact: Path) -> None:

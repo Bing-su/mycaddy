@@ -16,11 +16,21 @@ keywords = ["caddy", "wsgi", "asgi", "web server", "http server"]
 dependencies = []
 
 [dependency-groups]
-dev = ["pdm-backend", "ruff", "pre-commit-uv", "tomli", "xh-bin"]
-test = ["pytest", "pytest-asyncio", "pytest-pretty", "httpx", "starlette"]
+dev = [
+    "pdm-backend",
+    "ruff",
+    "pre-commit-uv",
+    "tomli",
+    "pbs-installer[all]",
+    "starlette",
+]
 
 [build-system]
-requires = ["pdm-backend", "tomli; python_version < '3.11'"]
+requires = [
+    "pdm-backend",
+    "tomli; python_version < '3.11'",
+    "pbs-installer[all]",
+]
 build-backend = "pdm.backend"
 
 [tool.uv]
@@ -68,8 +78,6 @@ ignore = ["B905", "E501"]
 unfixable = ["F401"]
 
 [tool.cibuildwheel]
-environment = { "UV_MANAGED_PYTHON" = "1" }
-
 archs = "auto64"
 build-frontend = "build[uv]"
 test-command = [
@@ -79,9 +87,13 @@ test-command = [
     "uvx --from xh-bin xh https://localhost:8001",
     "mycaddy stop",
 ]
+
 [tool.cibuildwheel.linux]
 before-build = [
     "dnf install -y wget",
     "wget https://git.io/go-installer.sh && bash go-installer.sh",
     "source /root/.bashrc",
 ]
+
+[tool.cibuildwheel.linux.environment]
+PATH = "/root/.go/bin:$PATH"
