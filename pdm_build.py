@@ -96,7 +96,7 @@ def setup_caddy_snake(path: Path) -> Path:
 
 
 def install_pbs(path: Path) -> Path:
-    version = ".".join(map(str, sys.version_info[:3]))
+    version = ".".join(map(str, sys.version_info[:2]))
     target = path / "python"
     if target.exists():
         shutil.rmtree(target)
@@ -124,7 +124,7 @@ def build(output: str) -> None:
         args.extend(["--with", module])
     args.extend(["--output", output])
 
-    include_path = str(pbs / "include")
+    include_path = str(next(pbs.rglob("Python.h")).parent)
     libdir = str(pbs / "libs") if is_windows() else str(pbs / "lib")
 
     libdir_files = [
