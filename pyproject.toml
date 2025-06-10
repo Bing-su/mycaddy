@@ -80,5 +80,6 @@ test-command = [
 
 [tool.cibuildwheel.linux]
 before-build = [
+    "dnf install -y wget",
     "wget https://git.io/go-installer.sh && bash go-installer.sh",
 ]
