@@ -66,3 +66,19 @@ select = [
 ]
 ignore = ["B905", "E501"]
 unfixable = ["F401"]
+
+[tool.cibuildwheel]
+archs = "auto64"
+build-frontend = "build[uv]"
+test-command = [
+    "mycaddy --version",
+    "mycaddy start --config {package}/Caddyfile",
+    "uvx --from xh-bin xh https://localhost:8000",
+    "uvx --from xh-bin xh https://localhost:8001",
+    "mycaddy stop",
+]
+
+[tool.cibuildwheel.linux]
+before-build = [
+    "dnf install -y golang",
+]
