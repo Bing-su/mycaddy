@@ -113,16 +113,24 @@ def build(output: str) -> None:
     include_path = sysconfig.get_path("include")
     libdir = sysconfig.get_config_var("LIBDIR")
 
+    libdir_files = [
+        p.stem for p in Path(libdir).glob("*") if "python" in p.stem.lower()
+    ]
+
     env = os.environ.copy()
     env["CGO_ENABLED"] = "1"
     env["CGO_CFLAGS"] = (
         f"-I{include_path} -fno-strict-overflow -Wunreachable-code -fPIC -DNDEBUG -g -O3 -Wall"
     )
-    env["CGO_LDFLAGS"] = f"-L{libdir} -lpython{sysconfig.get_config_var('VERSION')}"
-    if not is_windows():
-        env["CGO_LDFLAGS"] += " -lpthread -ldl -lutil -lm"
+    env["CGO_LDFLAGS"] = f"-L{libdir}"
+    for libfile in libdir_files:
+        env["CGO_LDFLAGS"] += f" -l{libfile}"
 
     subprocess.run(args, check=False, env=env)  # noqa: S603
+
+    if not Path(output).exists():
+        msg = f"Build failed, output not found at {output}"
+        raise RuntimeError(msg)
     Path(output).chmod(0o777)
 
 
