@@ -127,9 +127,18 @@ def build(output: str) -> None:
     include_path = str(next(pbs.rglob("Python.h")).parent)
     libdir = str(pbs / "libs") if is_windows() else str(pbs / "lib")
 
-    libdir_files = [
-        p.stem for p in Path(libdir).glob("*") if "python" in p.stem.lower()
-    ]
+    if is_windows():
+        libdir_files = [
+            p.stem
+            for p in Path(libdir).glob("*")
+            if p.is_file() and "python" in p.stem.lower()
+        ]
+    else:
+        libdir_files = [
+            p.stem
+            for p in Path(libdir).glob("*")
+            if p.is_dir() and "python" in p.stem.lower()
+        ]
 
     env = os.environ.copy()
     env["CGO_ENABLED"] = "1"
