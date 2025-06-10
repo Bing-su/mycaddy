@@ -1,0 +1,68 @@
+[project]
+name = "mycaddy"
+version = "0.1.0"
+description = "💻Personal Caddy server for me"
+readme = "README.md"
+authors = [{ name = "Dowon", email = "ks2515@naver.com" }]
+requires-python = ">=3.10"
+license = "MIT"
+classifiers = [
+    "Programming Language :: Go",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Internet :: WWW/HTTP :: WSGI :: Server",
+]
+keywords = ["caddy", "wsgi", "asgi", "web server", "http server"]
+dependencies = []
+
+[dependency-groups]
+dev = ["pdm-backend", "ruff", "pre-commit-uv", "tomli", "xh-bin"]
+test = ["pytest", "pytest-asyncio", "pytest-pretty", "httpx", "starlette"]
+
+[build-system]
+requires = ["pdm-backend", "tomli; python_version < '3.11'"]
+build-backend = "pdm.backend"
+
+[tool.uv]
+default-groups = "all"
+
+[tool.pdm.build]
+is-purelib = false
+excludes = ["bin/*", ".gitignore", "*.py"]
+
+[tool.pdm.build.wheel-data]
+scripts = ["${BUILD_DIR}/bin/*"]
+
+[tool.ruff.lint]
+select = [
+    "A",
+    "B",
+    "C4",
+    "C90",
+    "E",
+    "EM",
+    "F",
+    "FA",
+    "FBT",
+    "FURB",
+    "I001",
+    "ISC",
+    "N",
+    "PD",
+    "PERF",
+    "PIE",
+    "PL",
+    "PT",
+    "PTH",
+    "RET",
+    "RUF",
+    "S",
+    "SIM",
+    "T20",
+    "TC",
+    "TRY",
+    "UP",
+    "W",
+]
+ignore = ["B905", "E501"]
+unfixable = ["F401"]

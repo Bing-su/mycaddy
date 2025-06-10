@@ -1,0 +1,15 @@
+{
+	order webdav before file_server
+}
+
+localhost:8000 {
+	route {
+		python {
+			module_asgi "app:app"
+		}
+	}
+}
+localhost:8001 {
+	webdav
+	file_server browse
+}
