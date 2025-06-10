@@ -80,9 +80,10 @@ unfixable = ["F401"]
 [tool.cibuildwheel]
 archs = "auto64"
 build-frontend = "build[uv]"
+test-sources = ["app.py", "Caddyfile"]
 test-command = [
     "mycaddy --version",
-    "mycaddy start --config {package}/Caddyfile",
+    "mycaddy start --config Caddyfile",
     "uvx --from xh-bin xh https://localhost:8000",
     "uvx --from xh-bin xh https://localhost:8001",
     "mycaddy stop",

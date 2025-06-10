@@ -35,8 +35,16 @@ def do_not_cross_compile() -> None:
         raise RuntimeError(msg)
 
 
-def is_windows():
+def is_cibuildwheel() -> bool:
+    return os.environ.get("CIBUILDWHEEL", "0") == "1"
+
+
+def is_windows() -> bool:
     return platform.system() == "Windows"
+
+
+def is_macos() -> bool:
+    return platform.system() == "Darwin"
 
 
 def get_go() -> str:
@@ -156,6 +164,10 @@ def build(output: str) -> None:
         dlls = pbs.glob("python*.dll")
         for dll in dlls:
             shutil.copy(dll, Path(output).parent)
+
+    if is_cibuildwheel() and is_macos():
+        dylib = next(Path(pbs, "lib").glob("libpython*.dylib"))
+        shutil.copy(dylib, Path("/install", "lib", dylib.name))
 
 
 def pdm_build_hook_enabled(context: Context):
