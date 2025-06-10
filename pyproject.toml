@@ -68,6 +68,8 @@ ignore = ["B905", "E501"]
 unfixable = ["F401"]
 
 [tool.cibuildwheel]
+environment = { "UV_MANAGED_PYTHON" = "1" }
+
 archs = "auto64"
 build-frontend = "build[uv]"
 test-command = [
@@ -77,9 +79,9 @@ test-command = [
     "uvx --from xh-bin xh https://localhost:8001",
     "mycaddy stop",
 ]
-
 [tool.cibuildwheel.linux]
 before-build = [
     "dnf install -y wget",
     "wget https://git.io/go-installer.sh && bash go-installer.sh",
+    "source /root/.bashrc",
 ]
