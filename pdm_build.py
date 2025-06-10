@@ -153,6 +153,12 @@ def build(output: str) -> None:
     env["CGO_ENABLED"] = "1"
     env["PKG_CONFIG_PATH"] = str(pbs / "lib" / "pkgconfig")
 
+    if is_cibuildwheel() and is_macos():
+        dylib = next(Path(pbs, "lib").glob("libpython*.dylib"))
+        dst = Path("/install", "lib", dylib.name)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(dylib, dst)
+
     subprocess.run(args, check=False, env=env)  # noqa: S603
 
     if not Path(output).exists():
@@ -164,10 +170,6 @@ def build(output: str) -> None:
         dlls = pbs.glob("python*.dll")
         for dll in dlls:
             shutil.copy(dll, Path(output).parent)
-
-    if is_cibuildwheel() and is_macos():
-        dylib = next(Path(pbs, "lib").glob("libpython*.dylib"))
-        shutil.copy(dylib, Path("/install", "lib", dylib.name))
 
 
 def pdm_build_hook_enabled(context: Context):
