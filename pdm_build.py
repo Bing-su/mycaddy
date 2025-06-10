@@ -82,12 +82,6 @@ def setup_caddy_snake(path: Path) -> Path:
 
     shutil.unpack_archive(zip_path, target.parent)
 
-    go_modifies = [target / "caddysnake.go", target / "pythonWorker.go"]
-    for go_modify in go_modifies:
-        content = go_modify.read_text("utf-8")
-        content = content.replace("// #cgo pkg-config: python3-embed", "")
-        go_modify.write_text(content, "utf-8")
-
     c_modify = target / "caddysnake.c"
     content = c_modify.read_text("utf-8")
     content = re.sub(r"(?<!_)environ", "environ_", content)
@@ -102,6 +96,26 @@ def install_pbs(path: Path) -> Path:
         shutil.rmtree(target)
     pbs_installer.install(version, target)
     return target
+
+
+def windows_pkg_config(path: Path) -> Path:
+    version = ".".join(map(str, sys.version_info[:2]))
+    pc_file = path / "python" / "lib" / "pkgconfig" / "python3-embed.pc"
+    content = f"""prefix=${{pcfiledir}}/../.."
+exec_prefix=${{prefix}}
+libdir=${{exec_prefix}}
+includedir=${{prefix}}/include
+
+Name: python3-embed
+Description: Python library
+Requires:
+Version: {version}
+Libs: -L${{libdir}} -lpython{sysconfig.get_config_var("VERSION")} -lpthread -lm
+Cflags: -I${{includedir}}
+"""
+    pc_file.parent.mkdir(parents=True, exist_ok=True)
+    pc_file.write_text(content, "utf-8")
+    return pc_file
 
 
 def build(output: str) -> None:
@@ -124,30 +138,12 @@ def build(output: str) -> None:
         args.extend(["--with", module])
     args.extend(["--output", output])
 
-    include_path = str(next(pbs.rglob("Python.h")).parent)
-    libdir = str(pbs / "libs") if is_windows() else str(pbs / "lib")
-
     if is_windows():
-        libdir_files = [
-            p.stem
-            for p in Path(libdir).glob("*")
-            if p.is_file() and "python" in p.stem.lower()
-        ]
-    else:
-        libdir_files = [
-            p.stem
-            for p in Path(libdir).glob("*")
-            if p.is_dir() and "python" in p.stem.lower()
-        ]
+        windows_pkg_config(cwd)
 
     env = os.environ.copy()
     env["CGO_ENABLED"] = "1"
-    env["CGO_CFLAGS"] = (
-        f"-I{include_path} -fno-strict-overflow -Wunreachable-code -fPIC -DNDEBUG -g -O3 -Wall"
-    )
-    env["CGO_LDFLAGS"] = f"-L{libdir}"
-    for libfile in libdir_files:
-        env["CGO_LDFLAGS"] += f" -l{libfile}"
+    env["PKG_CONFIG_PATH"] = str(pbs / "lib" / "pkgconfig")
 
     subprocess.run(args, check=False, env=env)  # noqa: S603
 

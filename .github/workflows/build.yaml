@@ -24,10 +24,12 @@ jobs:
         with:
           go-version: stable
 
+      - name: Install pkgconfiglite
+        if: runner.os == 'Windows'
+        run: choco install -y pkgconfiglite
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.0.0rc2
-        env:
-          UV_MANAGED_PYTHON: "1"
 
       - uses: actions/upload-artifact@v4
         with:
