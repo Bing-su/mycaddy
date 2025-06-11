@@ -28,6 +28,13 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install -y pkgconfiglite
 
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        if: runner.os != 'Linux'
+        with:
+          version: "20"
+          env: true
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.0.0rc2
 

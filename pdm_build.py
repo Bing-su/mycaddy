@@ -47,6 +47,10 @@ def is_macos() -> bool:
     return platform.system() == "Darwin"
 
 
+def is_linux() -> bool:
+    return platform.system() == "Linux"
+
+
 def get_go() -> str:
     go = shutil.which("go")
     if go is None:
@@ -118,7 +122,7 @@ Name: python3-embed
 Description: Python library
 Requires:
 Version: {version}
-Libs: -L${{libdir}} -lpython{sysconfig.get_config_var("VERSION")} -lpthread -lm
+Libs: -L${{libdir}} -lpython3 -lpthread -lm
 Cflags: -I${{includedir}}
 """
     pc_file.parent.mkdir(parents=True, exist_ok=True)
@@ -152,12 +156,8 @@ def build(output: str) -> None:
     env = os.environ.copy()
     env["CGO_ENABLED"] = "1"
     env["PKG_CONFIG_PATH"] = str(pbs / "lib" / "pkgconfig")
-
-    if is_cibuildwheel() and is_macos():
-        dylib = next(Path(pbs, "lib").glob("libpython*.dylib"))
-        dst = Path("/install", "lib", dylib.name)
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(dylib, dst)
+    if not is_linux():
+        env["CGO_CFLAGS"] = "-static"
 
     subprocess.run(args, check=False, env=env)  # noqa: S603
 
