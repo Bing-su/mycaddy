@@ -101,5 +101,7 @@ before-build = [
 [tool.cibuildwheel.linux.environment]
 PATH = "/root/.go/bin:$PATH"
 LD_LIBRARY_PATH = "$PATH"
+
+[tool.cibuildwheel.environment]
 CC = "clang"
 CXX = "clang++"

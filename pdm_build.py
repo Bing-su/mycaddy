@@ -155,9 +155,11 @@ def build(output: str) -> None:
 
     env = os.environ.copy()
     env["CGO_ENABLED"] = "1"
+
+    pc_file = pbs / "lib" / "pkgconfig" / "python3-embed.pc"
+    pc_content = pc_file.read_text("utf-8")
+    pc_content = pc_content.replace("${pcfiledir}/../..", pbs.absolute().as_posix())
     env["PKG_CONFIG_PATH"] = str(pbs / "lib" / "pkgconfig")
-    if not is_linux():
-        env["CGO_CFLAGS"] = "-static"
 
     subprocess.run(args, check=False, env=env)  # noqa: S603
 
